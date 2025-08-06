@@ -1,3 +1,17 @@
+name: Build, Push, and Deploy to Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: us-west1
+  REPO_NAME: image-registry
+  IMAGE_NAME: flashcard-match
+  SERVICE_NAME: flashcard-match
+
 jobs:
   build-and-deploy:
     name: Build and Deploy
@@ -26,13 +40,13 @@ jobs:
       - name: Build Docker image
         run: >
           docker build -t 
-          ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/image-registry/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           .
 
       - name: Push Docker image to Artifact Registry
         run: >
           docker push 
-          ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/image-registry/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
       - name: Deploy to Cloud Run
         id: deploy
@@ -40,7 +54,7 @@ jobs:
         with:
           service: ${{ env.SERVICE_NAME }}
           region: ${{ env.REGION }}
-          image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/image-registry/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           flags: '--allow-unauthenticated'
 
       - name: Show Deployed URL
